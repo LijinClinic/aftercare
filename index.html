@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>시술 후 주의사항 안내</title>
+<style>
+  :root{
+    --bg:#F4F7F5;
+    --surface:#FFFFFF;
+    --text:#23302B;
+    --text-soft:#5C6B64;
+    --line:#E1E8E4;
+    --brand:#2F4F46;
+    --brand-soft:#DCE8E3;
+    --cat-laser:#B9832E;
+    --cat-laser-soft:#F5EAD7;
+    --cat-injection:#A9667A;
+    --cat-injection-soft:#F4E4EA;
+    --cat-lifting:#3E7288;
+    --cat-lifting-soft:#DEEAEF;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Pretendard Variable","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","PingFang SC","Noto Sans SC","PingFang TC","Noto Sans TC","Hiragino Kaku Gothic ProN","Noto Sans JP",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  /* ---------- 상단 헤더 / 진행 표시 ---------- */
+  header{
+    padding:18px 20px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .clinic-name{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-soft);
+    letter-spacing:0.02em;
+  }
+  .steps{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .step-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--line);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .step-dot.active{ background:var(--brand); transform:scale(1.25); }
+  .step-dot.done{ background:var(--cat-lifting); }
+
+  .back-btn{
+    background:none;border:none;
+    color:var(--brand);
+    font-size:14px;font-weight:600;
+    padding:6px 4px;
+    cursor:pointer;
+    display:flex;align-items:center;gap:4px;
+    visibility:hidden;
+  }
+  .back-btn.show{ visibility:visible; }
+
+  main{
+    flex:1;
+    padding:6px 20px 40px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .screen{ display:none; flex-direction:column; flex:1; animation:fade .25s ease; }
+  .screen.active{ display:flex; }
+  @media (prefers-reduced-motion: reduce){ .screen{ animation:none; } }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  h1{
+    font-size:21px;
+    font-weight:700;
+    margin:10px 0 4px;
+    line-height:1.4;
+  }
+  .sub{
+    font-size:13px;
+    color:var(--text-soft);
+    margin:0 0 22px;
+  }
+
+  /* ---------- 언어 선택 화면 ---------- */
+  .lang-grid{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .lang-btn{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    font-size:17px;
+    font-weight:700;
+    color:var(--text);
+    text-align:left;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .lang-btn:active{ background:var(--brand-soft); }
+  .lang-btn:hover{ border-color:var(--brand); }
+  .lang-btn .arrow{ color:var(--text-soft); font-size:16px; }
+
+  /* ---------- 시술 선택 화면 ---------- */
+  .cat-block{ margin-bottom:24px; }
+  .cat-label{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:700;
+    padding:5px 10px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .cat-label.laser{ background:var(--cat-laser-soft); color:var(--cat-laser); }
+  .cat-label.injection{ background:var(--cat-injection-soft); color:var(--cat-injection); }
+  .cat-label.lifting{ background:var(--cat-lifting-soft); color:var(--cat-lifting); }
+
+  .proc-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .proc-btn{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:4px solid var(--line);
+    border-radius:12px;
+    padding:14px 12px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text);
+    text-align:left;
+    cursor:pointer;
+    line-height:1.35;
+    min-height:56px;
+    display:flex;
+    align-items:center;
+  }
+  .proc-btn.laser{ border-left-color:var(--cat-laser); }
+  .proc-btn.injection{ border-left-color:var(--cat-injection); }
+  .proc-btn.lifting{ border-left-color:var(--cat-lifting); }
+  .proc-btn:active{ background:var(--bg); }
+  .proc-btn:hover{ border-color:var(--brand); }
+
+  /* ---------- 주의사항 화면 ---------- */
+  .care-tag{
+    display:inline-flex;
+    align-self:flex-start;
+    font-size:12px;
+    font-weight:700;
+    color:var(--text-soft);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-bottom:8px;
+  }
+  .care-title{
+    font-size:24px;
+    font-weight:800;
+    margin:0 0 18px;
+    line-height:1.35;
+    padding-bottom:16px;
+    border-bottom:2px solid var(--line);
+  }
+  .care-body{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    font-size:15.5px;
+    line-height:1.8;
+    color:var(--text);
+    white-space:pre-line;
+    flex:1;
+  }
+  .care-footer{
+    margin-top:18px;
+    font-size:12.5px;
+    color:var(--text-soft);
+    line-height:1.6;
+  }
+  .care-actions{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .action-btn{
+    flex:1;
+    padding:14px 10px;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    text-align:center;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--text);
+  }
+  .action-btn.primary{
+    background:var(--brand);
+    border-color:var(--brand);
+    color:#fff;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="clinic-name" id="clinicNameLabel"></span>
+    <button class="back-btn" id="backBtn">‹ <span id="backBtnLabel">이전</span></button>
+    <div class="steps">
+      <div class="step-dot" data-step="1"></div>
+      <div class="step-dot" data-step="2"></div>
+      <div class="step-dot" data-step="3"></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1) 언어 선택 화면 -->
+    <section class="screen" id="screen-lang">
+      <h1 id="langTitle">언어를 선택해 주세요</h1>
+      <p class="sub">Please select your language</p>
+      <div class="lang-grid" id="langGrid"></div>
+    </section>
+
+    <!-- 2) 시술 선택 화면 -->
+    <section class="screen" id="screen-proc">
+      <h1 id="procTitle">오늘 받으신 시술을 선택해 주세요</h1>
+      <div id="procGroups"></div>
+    </section>
+
+    <!-- 3) 주의사항 화면 -->
+    <section class="screen" id="screen-care">
+      <span class="care-tag" id="careTag">시술 후 주의사항</span>
+      <h1 class="care-title" id="careProcName"></h1>
+      <div class="care-body" id="careBody"></div>
+      <p class="care-footer" id="careFooter"></p>
+      <div class="care-actions">
+        <button class="action-btn" id="toProcBtn">다른 시술 보기</button>
+        <button class="action-btn primary" id="toLangBtn">언어 변경</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* =========================================================================
+   ✏️ 이 아래 데이터만 수정하면 화면 내용이 바뀝니다 (코드 몰라도 OK)
+
+   1. CLINIC_NAME  : 병원/클리닉 이름 (상단에 작게 표시됩니다)
+   2. PROCEDURES 배열 안에서 원하는 시술을 name.ko 값으로 찾으세요.
+      - name  : 언어별 시술 이름
+      - care  : 언어별 "시술 후 주의사항" 본문 (지금은 전부 [초안] 상태)
+   3. 문단을 나누고 싶으면 텍스트 안에 두 번 줄바꿈( \n\n )을 넣어주세요.
+      예) "1. 3일간 사우나 금지.\n\n2. 자외선 차단제를 꼭 발라주세요."
+   4. 저장 후 새로고침하면 바로 반영됩니다. (별도 프로그램 설치 불필요)
+   ========================================================================= */
+
+const CLINIC_NAME = "리진의원 / LIJIN Clinic"; // 병원 이름으로 교체하세요
+
+const LANGUAGES = [
+  { code:"ko",    label:"한국어" },
+  { code:"en",    label:"English" },
+  { code:"zh-CN", label:"简体中文" },
+  { code:"zh-TW", label:"繁體中文" },
+  { code:"ja",    label:"日本語" }
+];
+
+const UI = {
+  "ko":    { chooseLang:"언어를 선택해 주세요", chooseSub:"Please select your language",
+             chooseProcedure:"오늘 받으신 시술을 선택해 주세요", back:"이전", changeLang:"언어 변경",
+             toProc:"다른 시술 보기", careTag:"시술 후 주의사항",
+             footer:"추가 문의사항이 있으시면 병원으로 연락해 주세요.",
+             cat:{ laser:"레이저 시술", injection:"주사 시술", lifting:"스킨 · 리프팅 시술" } },
+  "en":    { chooseLang:"Please select your language", chooseSub:"언어를 선택해 주세요",
+             chooseProcedure:"Please select the treatment you received today", back:"Back", changeLang:"Change Language",
+             toProc:"View other treatments", careTag:"Aftercare Instructions",
+             footer:"If you have any questions, please contact the clinic.",
+             cat:{ laser:"Laser Treatments", injection:"Injection Treatments", lifting:"Skin & Lifting Treatments" } },
+  "zh-CN": { chooseLang:"请选择语言", chooseSub:"Please select your language",
+             chooseProcedure:"请选择您今天接受的项目", back:"上一步", changeLang:"切换语言",
+             toProc:"查看其他项目", careTag:"术后注意事项",
+             footer:"如有其他疑问，请联系医院。",
+             cat:{ laser:"激光项目", injection:"注射项目", lifting:"皮肤 · 提升项目" } },
+  "zh-TW": { chooseLang:"請選擇語言", chooseSub:"Please select your language",
+             chooseProcedure:"請選擇您今天接受的項目", back:"上一步", changeLang:"切換語言",
+             toProc:"查看其他項目", careTag:"術後注意事項",
+             footer:"如有其他疑問，請聯繫診所。",
+             cat:{ laser:"雷射項目", injection:"注射項目", lifting:"皮膚 · 提升項目" } },
+  "ja":    { chooseLang:"言語を選択してください", chooseSub:"Please select your language",
+             chooseProcedure:"本日受けられた施術を選択してください", back:"戻る", changeLang:"言語を変更",
+             toProc:"他の施術を見る", careTag:"施術後の注意事項",
+             footer:"ご不明な点がございましたら、クリニックまでご連絡ください。",
+             cat:{ laser:"レーザー施術", injection:"注射施術", lifting:"スキン・リフティング施術" } }
+};
+
+// category: "laser" | "injection" | "lifting"
+const DRAFT_CARE = {
+  "ko":    "[초안] 이 시술에 대한 시술 후 주의사항을 이곳에 입력해 주세요.",
+  "en":    "[Draft] Please add the aftercare instructions for this procedure here.",
+  "zh-CN": "[草稿] 请在此处填写该项目的术后注意事项。",
+  "zh-TW": "[草稿] 請在此處填寫該項目的術後注意事項。",
+  "ja":    "[下書き] こちらにこの施術のアフターケア案内を入力してください。"
+};
+
+const PROCEDURES = [
+  { id:"stemcell", category:"lifting",
+    name:{ ko:"줄기세포", en:"Stem Cell Treatment", "zh-CN":"干细胞治疗", "zh-TW":"幹細胞治療", ja:"幹細胞治療" },
+    care:{
+      ko:"1. 통증, 부기, 멍 등 불편한 증상이 있는 경우 냉찜질을 하시면 증상 완화에 도움이 됩니다. 시술 부위를 문지르거나 자극하지 마세요.\n\n2. 시술 후 24시간 동안은 시술 부위에 물이 닿지 않도록 주의해 주세요. 세안 및 메이크업은 의사의 지시에 따라주세요.\n\n3. 시술 후 1주일간은 사우나, 찜질방, 수영, 격렬한 운동, 음주, 흡연을 삼가주세요.\n\n4. 자외선 차단을 충분히 해주세요. 외출 시 자외선 차단제를 바르고 모자나 양산도 함께 사용해 주세요.\n\n5. 피부가 건조하지 않도록 충분히 보습해 주시고, 재생 크림 등을 사용하시면 피부 회복에 도움이 됩니다.\n\n6. 심한 통증, 고열, 발진, 물집, 화농, 지속적인 부기 등 이상 반응이 계속되면 즉시 병원으로 연락해 주세요.",
+      en:"1. If you experience discomfort such as pain, swelling, or bruising, applying a cold compress can help relieve symptoms. Avoid rubbing or stimulating the treated area.\n\n2. Please avoid getting water on the treated area for 24 hours after the procedure. Follow your doctor's guidance for washing your face or applying makeup.\n\n3. For one week after the procedure, avoid saunas, steam baths, swimming, strenuous exercise, alcohol, and smoking.\n\n4. Protect your skin from UV rays. When going outside, use sunscreen and also wear a hat or use a parasol.\n\n5. Keep your skin well moisturized to prevent dryness; using a recovery cream can help support skin healing.\n\n6. If you experience severe pain, high fever, rash, blisters, pus, or persistent swelling, please contact the clinic immediately.",
+      "zh-CN":"1. 若出现疼痛，肿胀，淤青等不适，可进行冷敷缓解。避免搓揉，刺激注射区域\n\n2. 施术后24小时内避免接触水，清洁与化妆请遵循医生建议\n\n3. 一周内避免桑拿，蒸汽浴，游泳，剧烈运动，饮酒或吸烟\n\n4. 注意防晒，出门时请使用防晒霜并佩戴帽子或遮阳伞\n\n5. 保持皮肤滋润，可使用再生修复霜促进皮肤修复\n\n6. 若出现剧烈疼痛，高烧，红疹，水泡，化脓，持续性肿胀等异常情况，请立即联系医院",
+      "zh-TW":"1. 若出現疼痛、腫脹、瘀青等不適，可進行冷敷緩解。請避免搓揉、刺激注射部位。\n\n2. 施術後24小時內請避免接觸水，清潔與化妝請遵循醫師指示。\n\n3. 一週內請避免三溫暖、蒸氣浴、游泳、劇烈運動、飲酒或吸菸。\n\n4. 請注意防曬，外出時請使用防曬乳並配戴帽子或陽傘。\n\n5. 請保持肌膚滋潤，可使用修復霜促進肌膚修復。\n\n6. 若出現劇烈疼痛、高燒、紅疹、水泡、化膿、持續性腫脹等異常情況，請立即聯繫院方。",
+      ja:"・痛み、腫れ、内出血などの不快症状がある場合は、冷却することで症状緩和に役立ちます。施術部位を擦ったり刺激したりしないでください。\n\n・施術後24時間は施術部位に水が触れないようご注意ください。洗顔やメイクは医師の指示に従ってください。\n\n・施術後1週間は、サウナ、スチームバス、水泳、激しい運動、飲酒、喫煙はお控えください。\n\n・紫外線対策を十分に行ってください。外出時は日焼け止めをご使用いただき、帽子や日傘なども併用してください。\n\n・肌の乾燥を防ぐため保湿を十分に行い、再生クリームなどをご使用いただくことで肌回復促進に役立ちます。\n\n・強い痛み、高熱、発疹、水ぶくれ、化膿、持続する腫れなど異常反応が続く場合は、すぐに当院までご連絡ください。"
+    } },
+
+  { id:"extraction", category:"lifting",
+    name:{ ko:"압출", en:"Acne Extraction", "zh-CN":"痘痘清理（清粉刺）", "zh-TW":"痘痘清理（清粉刺）", ja:"ニキビ圧出" },
+    care:{
+      ko:"1. 압출 시술 후에는 시술 부위를 만지거나 긁지 마세요. 자극, 감염, 흉터(상처 자국), 색소침착의 원인이 될 수 있습니다.\n\n2. 시술 후 붉어짐, 부기, 가벼운 따가움, 압통 등이 나타날 수 있습니다. 이는 일반적인 일시적 반응으로, 보통 며칠 이내에 호전됩니다.\n\n3. 필요한 경우 쿨링팩 등으로 부드럽게 냉찜질하시면 붉어짐, 부기, 불편감 완화에 도움이 됩니다.\n\n4. 시술 후에는 직접 여드름을 짜거나 압출하지 마세요. 염증이 악화되고 흉터 위험이 높아질 수 있습니다.\n\n5. 세안 시 피부를 부드럽게 다뤄주시고, 시술 후 약 1주일간은 스크럽, 필링 제품, 각질 제거, 레티놀, 고농도 비타민C 제품 등 자극이 강한 스킨케어 제품 사용을 피해주세요.\n\n6. 시술 후 24시간은 진한 메이크업을 피해주세요. 메이크업이 필요한 경우 부드럽게 하시고, 클렌징도 자극을 주지 않도록 해주세요.\n\n7. 피부가 진정된 후에는 자외선으로부터 보호하기 위해 SPF50+ 자외선 차단제를 자주 발라주세요.\n\n8. 심한 통증, 붉어짐 악화, 고름, 열감, 염증 악화 등이 계속되면 즉시 병원으로 연락해 주세요.",
+      en:"1. Do not touch or scratch the treated area after extraction. This can cause irritation, infection, scarring, or pigmentation.\n\n2. Redness, swelling, mild stinging, or tenderness may occur after the procedure. These are common temporary reactions that usually improve within a few days.\n\n3. If needed, gently applying a cold pack can help reduce redness, swelling, and discomfort.\n\n4. Do not pop or extract pimples yourself after the procedure. This may worsen inflammation and increase the risk of scarring.\n\n5. Be gentle with your skin when washing your face, and avoid harsh skincare products such as scrubs, peeling products, exfoliants, retinol, and high-concentration vitamin C for about one week after the procedure.\n\n6. Avoid heavy makeup for 24 hours after the procedure. If makeup is necessary, apply and remove it gently without irritating the skin.\n\n7. Once your skin has calmed down, apply SPF50+ sunscreen frequently to protect it from UV rays.\n\n8. If you experience severe pain, worsening redness, pus, heat, or worsening inflammation, please contact the clinic immediately.",
+      "zh-CN":"1. 压出（清粉）后请勿触摸或抓挠施术部位，否则可能引起刺激、感染、疤痕或色素沉着。\n\n2. 施术后可能出现发红、肿胀、轻微刺痛、压痛等，属于常见的暂时性反应，通常数日内会改善。\n\n3. 如有需要，可轻轻使用冷敷袋冷敷，有助于缓解发红、肿胀及不适感。\n\n4. 施术后请勿自行挤压或清除粉刺，以免炎症加重，增加留疤风险。\n\n5. 洗脸时请轻柔对待皮肤，施术后约一周内请避免使用磨砂、去角质、A醇、高浓度维生素C等刺激性护肤品。\n\n6. 施术后24小时内请避免浓妆，如需化妆请轻柔进行，卸妆时也请避免刺激皮肤。\n\n7. 待皮肤稳定后，请勤补涂SPF50+防晒霜以防止紫外线伤害。\n\n8. 若出现剧烈疼痛、发红加重、化脓、发热感、炎症加重等情况持续，请立即联系医院。",
+      "zh-TW":"1. 壓出（清粉）後請勿觸摸或抓撓施術部位，否則可能引起刺激、感染、疤痕或色素沉澱。\n\n2. 施術後可能出現發紅、腫脹、輕微刺痛、壓痛等，屬於常見的暫時性反應，通常數日內會改善。\n\n3. 如有需要，可輕輕使用冷敷袋冷敷，有助於緩解發紅、腫脹及不適感。\n\n4. 施術後請勿自行擠壓或清除粉刺，以免發炎加重，增加留疤風險。\n\n5. 洗臉時請輕柔對待肌膚，施術後約一週內請避免使用磨砂、去角質、A醇、高濃度維他命C等刺激性保養品。\n\n6. 施術後24小時內請避免濃妝，如需化妝請輕柔進行，卸妝時也請避免刺激肌膚。\n\n7. 待肌膚穩定後，請勤補擦SPF50+防曬乳以防止紫外線傷害。\n\n8. 若出現劇烈疼痛、發紅加重、化膿、發熱感、發炎加重等情況持續，請立即聯繫院方。",
+      ja:"・ニキビ圧出後は、施術部位を触ったり掻いたりしないでください。刺激や感染、瘢痕（傷跡）、色素沈着の原因となる場合があります。\n\n・施術後に赤み、腫れ、軽いヒリつき感、圧痛などが生じる場合があります。これらは一般的な一時的な反応であり、通常数日以内に改善します。\n\n・必要に応じて、冷却パックなどで優しく冷やすことで赤みや腫れ、不快感の軽減に役立ちます。\n\n・施術後はご自身でニキビを潰したり、圧出したりしないでください。炎症が悪化し、傷跡のリスクが高まる可能性があります。\n\n・洗顔時は肌を優しく扱い、施術後約1週間はスクラブ、ピーリング製品、角質除去、レチノール、高濃度ビタミンC製品など刺激の強いスキンケア製品の使用を避けてください。\n\n・施術後24時間は濃いメイクを避けてください。メイクが必要な場合は優しく行い、クレンジングも刺激を与えないようにしてください。\n\n・肌が落ち着いた後は、紫外線から保護するため、SPF50+の日焼け止めをこまめにご使用ください。\n\n・強い痛み、赤みの悪化、膿、熱感、炎症の悪化などが続く場合は、すぐに病院へご連絡ください。"
+    } },
+
+  { id:"threadlifting", category:"lifting",
+    name:{ ko:"실리프팅", en:"Thread Lifting", "zh-CN":"线雕提升", "zh-TW":"線雕提升", ja:"糸リフティング" },
+    care:{
+      ko:"1. 시술 후 24시간 동안은 시술 부위에 물이 닿지 않도록 주의하시고, 세안과 메이크업은 가볍게 해주세요.\n\n2. 시술 후 2~3일간은 부기와 멍을 최소화하기 위해 냉찜질(아이싱)을 자주 해주세요.\n\n3. 시술 후 며칠간은 혈액순환을 촉진하는 행위(사우나, 온천, 수영, 격렬한 운동, 과도한 음주 등)나 시술 부위에 자극을 주는 행동은 피해주세요.\n\n4. 시술 후 1개월간은 시술 부위에 강한 압력을 가하거나 마사지하는 것을 피해주세요.\n\n5. 입을 크게 벌리거나 얼굴을 크게 움직이는 표정(예: 크게 웃기)도 자제하시는 것을 권장드립니다.\n\n6. 충분한 수분 섭취와 균형 잡힌 식사, 규칙적인 운동은 시술 효과 유지 및 회복에 도움이 됩니다.",
+      en:"1. For 24 hours after the procedure, avoid getting water on the treated area, and keep washing your face and applying makeup light.\n\n2. For 2–3 days after the procedure, apply cold compresses frequently to minimize swelling and bruising.\n\n3. For several days after the procedure, avoid activities that promote blood circulation (sauna, hot springs, swimming, strenuous exercise, excessive alcohol, etc.) or anything that stimulates the treated area.\n\n4. For one month after the procedure, avoid applying strong pressure or massaging the treated area.\n\n5. It's also recommended to avoid opening your mouth wide or making large facial expressions (e.g. laughing broadly).\n\n6. Staying well hydrated, eating a balanced diet, and exercising regularly can help maintain the results and support recovery.",
+      "zh-CN":"1. 施术后24小时内请避免施术部位接触水，洗脸和化妆请轻柔进行。\n\n2. 施术后2～3天内，请经常冷敷以最大限度减少肿胀和淤青。\n\n3. 施术后数日内请避免促进血液循环的行为（桑拿、温泉、游泳、剧烈运动、过量饮酒等），以及对施术部位造成刺激的行为。\n\n4. 施术后1个月内请避免对施术部位施加较大压力或按摩。\n\n5. 建议避免大幅张口或做出大幅度的面部表情（例如开怀大笑）。\n\n6. 充分补水、均衡饮食、规律运动有助于维持施术效果及恢复。",
+      "zh-TW":"1. 施術後24小時內請避免施術部位接觸水，洗臉和化妝請輕柔進行。\n\n2. 施術後2～3天內，請經常冷敷以盡量減少腫脹和瘀青。\n\n3. 施術後數日內請避免促進血液循環的行為（三溫暖、溫泉、游泳、劇烈運動、過量飲酒等），以及對施術部位造成刺激的行為。\n\n4. 施術後1個月內請避免對施術部位施加較大壓力或按摩。\n\n5. 建議避免大幅張口或做出大幅度的臉部表情（例如開懷大笑）。\n\n6. 充分補水、均衡飲食、規律運動有助於維持施術效果及恢復。",
+      ja:"・施術後24時間は、施術部位に水が触れないよう注意し、洗顔やメイクは軽めに行ってください。\n\n・施術後2～3日間は、腫れや内出血を最小限に抑えるために、冷やすケア（アイシング）をこまめに行ってください。\n\n・施術後数日間は血行を促進する行為（サウナ、温泉、水泳、激しい運動、過度な飲酒など）や、施術部位に刺激を与える行動は避けてください。\n\n・施術後1ヶ月間は、施術部位に強い圧力をかけたりマッサージをするのは避けてください。\n\n・口を大きく開けたり、顔を大きく動かす表情（例：大きく笑う）も控えることをおすすめします。\n\n・十分な水分補給とバランス良い食事、規則正しい運動は、施術効果の維持および回復に役立ちます。"
+    } },
+
+  { id:"skinbooster", category:"lifting",
+    name:{ ko:"스킨/콜라겐부스터", en:"Skin / Collagen Booster", "zh-CN":"皮肤/胶原蛋白增效治疗", "zh-TW":"肌膚/膠原蛋白增效療程", ja:"スキン/コラーゲンブースター" },
+    care:{
+      ko:"1. 시술 직후 나타나는 붉어짐, 부기, 요철(울퉁불퉁함), 멍 등은 자연스러운 반응이며, 냉찜질(냉각)이 증상 완화에 도움이 됩니다. 단, 리프팅 시술을 함께 받으신 경우에는 냉찜질을 삼가주시기 바랍니다.\n\n2. 시술 후 24시간 동안은 물이 닿지 않도록 주의하시고, 세안과 화장은 가볍게 해주세요.\n\n3. 시술 후 며칠간은 뜨거운 샤워, 사우나, 온천, 수영, 격렬한 운동을 피해주세요.\n\n4. 시술 부위를 세게 문지르거나 마사지하지 마세요.\n\n5. 시술 후에는 피부가 건조해지기 쉬우므로 보습제를 충분히 사용하여 피부를 진정시켜 주세요.\n\n6. 외출 시에는 자외선 차단제를 꼼꼼히 발라주세요.\n\n7. 음주·흡연은 회복을 지연시키고 부작용 위험을 높이므로 시술 후 1~2주간은 삼가주세요.\n\n8. (쥬베룩볼륨, 스컬트라, 울트라콜200) 약제가 고르게 퍼지도록 시술 후 약 1주일간은 가볍게 마사지해 주시는 것을 권장드립니다. 특히 쥬베룩볼륨 시술 후에는 약제의 균일한 확산과 뭉침 방지를 위해 '5-5-5 법칙'(하루 5회, 5분씩, 5일간) 마사지를 권장드립니다.",
+      en:"1. Redness, swelling, uneven texture, or bruising immediately after the procedure are normal reactions, and a cold compress can help relieve these symptoms. However, if you also received a lifting procedure, please avoid cold compresses.\n\n2. For 24 hours after the procedure, avoid getting water on the treated area, and keep washing your face and applying makeup light.\n\n3. For several days after the procedure, avoid hot showers, saunas, hot springs, swimming, and strenuous exercise.\n\n4. Do not rub or massage the treated area firmly.\n\n5. Skin tends to become dry after the procedure, so use enough moisturizer to soothe and hydrate the skin.\n\n6. Apply sunscreen thoroughly when going outside.\n\n7. Avoid alcohol and smoking for 1–2 weeks after the procedure, as they can delay recovery and increase the risk of side effects.\n\n8. (For Juvelook Volume, Sculptra, Ultra Col 200) It's recommended to gently massage the treated area for about a week after the procedure to help the product spread evenly. In particular, after Juvelook Volume, follow the \"5-5-5 rule\" — massage 5 times a day, 5 minutes each, for 5 days — to ensure even distribution and prevent lumps.",
+      "zh-CN":"1. 施术后立即出现的发红、肿胀、凹凸不平、淤青等属于自然反应，冷敷有助于缓解症状。但若同时接受了提升类项目，请避免冷敷。\n\n2. 施术后24小时内请避免接触水，洗脸和化妆请轻柔进行。\n\n3. 施术后数日内请避免热水淋浴、桑拿、温泉、游泳、剧烈运动。\n\n4. 请勿用力揉搓或按摩施术部位。\n\n5. 施术后皮肤容易干燥，请充分使用保湿产品以镇定肌肤。\n\n6. 外出时请仔细涂抹防晒霜。\n\n7. 饮酒、吸烟会延缓恢复并增加副作用风险，请在施术后1～2周内避免。\n\n8. （儒白克丰盈、舒美塑、超轮廓200）为使药剂均匀扩散，建议施术后约1周内轻柔按摩。尤其是儒白克丰盈施术后，为使药剂均匀扩散并预防结块，建议遵循「5-5-5法则」，即每天5次、每次5分钟，持续5天进行按摩。",
+      "zh-TW":"1. 施術後立即出現的發紅、腫脹、凹凸不平、瘀青等屬於自然反應，冷敷有助於緩解症狀。但若同時接受了拉提類項目，請避免冷敷。\n\n2. 施術後24小時內請避免接觸水，洗臉和化妝請輕柔進行。\n\n3. 施術後數日內請避免熱水淋浴、三溫暖、溫泉、游泳、劇烈運動。\n\n4. 請勿用力搓揉或按摩施術部位。\n\n5. 施術後肌膚容易乾燥，請充分使用保濕產品以鎮定肌膚。\n\n6. 外出時請仔細塗抹防曬乳。\n\n7. 飲酒、吸菸會延緩恢復並增加副作用風險，請在施術後1～2週內避免。\n\n8. （儒優莉緊緻、舒顏萃、超輪廓200）為使藥劑均勻擴散，建議施術後約1週內輕柔按摩。尤其是儒優莉緊緻施術後，為使藥劑均勻擴散並預防結塊，建議遵循「5-5-5法則」，即每天5次、每次5分鐘，持續5天進行按摩。",
+      ja:"・施術直後の赤み、腫れ、エンボス（凹凸）、あざなどは自然な反応であり、冷湿布（冷やすこと）が症状の緩和に役立ちます。なお、リフトアップ施術を受けられた場合は、冷湿布（冷やすこと）はお控えいただきますようお願いいたします。\n\n・施術後24時間は水が触れないように注意し、洗顔·化粧は軽く行ってください。\n\n・施術後数日間は、熱いシャワー、サウナ、温泉、水泳、激しい運動を避けてください。\n\n・施術部位を強くこすったりマッサージしたりしないでください。\n\n・施術後は肌が乾燥しやすくなるため、保湿剤を十分に使用し、肌を鎮静させてください。\n\n・外出時は日焼け止めをしっかり塗ってください。\n\n・飲酒·喫煙は回復を遅らせ、副作用のリスクを高めるため、施術後1～2週間は控えてください。\n\n・（ジュベルックボリューム、スカルプトラ、ウルトラコール200）薬剤がよく広がるように、施術後は約1週間程度、優しくマッサージを行うことをお勧めします。特にジュベルックボリュームの施術後は、薬剤の均等な拡散と塊の予防のために「5-5-5法則」、1日5回、5分間、5日間マッサージを行うことを推奨します。"
+    } },
+
+  { id:"ivtherapy", category:"injection",
+    name:{ ko:"수액", en:"IV Therapy", "zh-CN":"营养点滴", "zh-TW":"營養點滴", ja:"点滴（栄養補給）" },
+    care:{
+      ko:"1. 주사 부위에 통증이나 부기가 생기면 즉시 의료진에게 알려주세요.\n\n2. 수액을 맞는 중에 어지러움, 메스꺼움, 가슴 답답함, 호흡곤란 등이 느껴지면 즉시 스태프에게 알려주세요.\n\n3. 시술 후 약 1주일간은 사우나, 스파, 수영, 격렬한 운동, 과도한 음주 및 흡연을 삼가주세요.\n\n4. 주사 부위에 멍이나 부기가 생긴 경우, 냉찜질을 하시면 증상 완화에 도움이 될 수 있습니다.\n\n5. 귀가 후 심한 두통, 구토, 호흡 곤란 등 이상 증상이 나타나면 즉시 병원으로 연락해 주세요.",
+      en:"1. If you experience pain or swelling at the injection site, please inform the medical staff immediately.\n\n2. If you feel dizziness, nausea, chest tightness, or difficulty breathing during the IV, please let the staff know right away.\n\n3. For about one week after the procedure, avoid saunas, spas, swimming, strenuous exercise, excessive alcohol, and smoking.\n\n4. If bruising or swelling occurs at the injection site, a cold compress may help relieve the symptoms.\n\n5. If you experience severe headache, vomiting, difficulty breathing, or other abnormal symptoms after going home, please contact the clinic immediately.",
+      "zh-CN":"1. 若注射部位出现疼痛或肿胀，请立即告知医护人员。\n\n2. 输液过程中若感到头晕、恶心、胸闷、呼吸困难等，请立即告知工作人员。\n\n3. 施术后约一周内请避免桑拿、水疗、游泳、剧烈运动及过量饮酒、吸烟。\n\n4. 若注射部位出现淤青或肿胀，冷敷有助于缓解症状。\n\n5. 回家后若出现剧烈头痛、呕吐、呼吸困难等异常症状，请立即联系医院。",
+      "zh-TW":"1. 若注射部位出現疼痛或腫脹，請立即告知醫護人員。\n\n2. 點滴過程中若感到頭暈、噁心、胸悶、呼吸困難等，請立即告知工作人員。\n\n3. 施術後約一週內請避免三溫暖、水療、游泳、劇烈運動及過量飲酒、吸菸。\n\n4. 若注射部位出現瘀青或腫脹，冷敷有助於緩解症狀。\n\n5. 回家後若出現劇烈頭痛、嘔吐、呼吸困難等異常症狀，請立即聯繫院方。",
+      ja:"・注射部位に痛みや腫れが生じた場合は、直ちに医療スタッフへお知らせください。\n\n・点滴中にめまい、吐き気、胸の圧迫感、呼吸困難などを感じた場合は、すぐにスタッフへお知らせください。\n\n・施術後約1週間は、サウナ、スパ、水泳、激しい運動、過度な飲酒や喫煙をお控えください。\n\n・注射部位に内出血や腫れが生じた場合は、冷却することで症状緩和に役立つ場合があります。\n\n・ご帰宅後、強い頭痛、嘔吐、息苦しさなど異常症状が現れた場合は、直ちに当院までご連絡ください。"
+    } },
+
+  { id:"filler", category:"injection",
+    name:{ ko:"필러", en:"Filler", "zh-CN":"玻尿酸填充", "zh-TW":"玻尿酸填充", ja:"フィラー（ヒアルロン酸注入）" },
+    care:{
+      ko:"1. 시술 후 24시간 동안은 시술 부위에 물이 닿지 않도록 주의하시고, 세안과 화장은 가볍게 해주세요.\n\n2. 필러 시술 부위를 과도하게 문지르거나 압력을 가하는 행동(엎드려 자기, 수경 착용, 모자 착용 등, 시술 부위에 따라 다를 수 있음)은 피해주세요.\n\n3. 시술 후 며칠간은 사우나, 찜질방, 수영, 격렬한 운동, 과도한 음주 등 혈액순환을 촉진하는 행동은 피해주세요.\n\n4. 멍이나 부기가 생길 수 있으나, 냉찜질을 하시면 완화에 도움이 됩니다.\n\n5. 예상치 못한 증상(심한 통증, 이상 감각, 물집, 피부색 변화, 시력 이상, 고름 등)이 나타나면 즉시 병원으로 연락해 주세요.",
+      en:"1. Avoid getting water on the treated area for 24 hours after the procedure, and keep washing your face and applying makeup light.\n\n2. Avoid excessive rubbing or applying pressure to the filler site (e.g. sleeping face-down, wearing swim goggles or a hat, depending on the treated area).\n\n3. For several days after the procedure, avoid activities that promote blood circulation, such as saunas, steam baths, swimming, strenuous exercise, and excessive alcohol.\n\n4. Bruising or swelling may occur, and a cold compress can help relieve it.\n\n5. If unexpected symptoms occur — such as severe pain, abnormal sensation, blisters, changes in skin color, vision problems, or pustules — please contact the clinic immediately.",
+      "zh-CN":"1. 施术后24小时内避免治疗部位接触水，清洁和化妆时应轻柔进行。\n\n2. 施术后避免过度摩擦或施加压力于治疗部位（如趴着睡，戴游泳镜，戴帽子等，据填充的部位而异）。\n\n3. 施术后几天内应避免进行热桑拿，汗蒸，游泳，剧烈运动，过度饮酒等活动，这些活动可能促进血液循环或刺激治疗部位。\n\n4. 可能会有淤青和肿胀，冷敷可以帮助缓解。\n\n5. 如果出现预期之外的症状（如剧烈疼痛，异常感觉，水泡，皮肤颜色变化，视力问题，脓疱等），请立即联系本院。",
+      "zh-TW":"1. 施術後24小時內避免治療部位接觸水，清潔和化妝時應輕柔進行。\n\n2. 施術後避免過度摩擦或施加壓力於治療部位（如趴著睡、戴泳鏡、戴帽子等，依填充部位而異）。\n\n3. 施術後數天內應避免進行熱三溫暖、汗蒸、游泳、劇烈運動、過度飲酒等活動，這些活動可能促進血液循環或刺激治療部位。\n\n4. 可能會有瘀青和腫脹，冷敷可以幫助緩解。\n\n5. 如果出現預期之外的症狀（如劇烈疼痛、異常感覺、水泡、皮膚顏色變化、視力問題、膿皰等），請立即聯繫本院。",
+      ja:"・施術後24時間は施術部位に水が触れないよう注意し、洗顔や化粧は軽く行ってください。\n\n・ヒアルロン酸施術部位を過度に擦ったり、圧力を加える行為（うつ伏せで寝る、水泳用ゴーグル、帽子など、施術部位により異なります）は避けてください。\n\n・施術後数日間は、サウナ、汗蒸、水泳、激しい運動、過度な飲酒など血行を促進する行為は避けてください。\n\n・あざや腫れが出る場合がありますが、冷やすことで改善が期待できます。\n\n・予期しない症状（激しい痛み、異常感覚、水ぶくれ、皮膚の色の変化、視力の異常、膿疱など）が現れた場合は、速やかに当院までご連絡ください。"
+    } },
+
+  { id:"botox", category:"injection",
+    name:{ ko:"보톡스", en:"Botox", "zh-CN":"肉毒素注射", "zh-TW":"肉毒素注射", ja:"ボトックス" },
+    care:{
+      ko:"1. 시술 후 4시간 동안은 시술 부위를 만지거나 문지르지 마세요. 또한 눕거나 고개를 숙이는 행동은 약물이 다른 근육으로 퍼질 수 있으므로 피해주세요.\n\n2. 시술 후 며칠간은 혈액순환을 촉진하는 행위(뜨거운 목욕, 사우나, 온천, 과도한 운동 등)나 시술 부위에 자극을 주는 행동은 피해주세요.\n\n3. 음주와 흡연은 부작용 위험을 높이므로 시술 후 1주일 정도는 삼가주세요.\n\n4. 시술 후 예상치 못한 증상(심한 통증, 이상 감각, 표정 비대칭 악화, 삼킴 곤란 등)이 나타나면 즉시 병원으로 연락해 주세요.\n\n5. 근육에 보톡스 시술을 받으신 경우, 시술 부위 근육을 과도하게 사용하지 않으시면 효과 유지에 도움이 됩니다.",
+      en:"1. For 4 hours after the injection, avoid touching or rubbing the treated area. Also avoid lying down or bending your head forward, as this may cause the product to spread to other muscles.\n\n2. For several days after the procedure, avoid activities that promote blood circulation (hot baths, saunas, hot springs, excessive exercise, etc.) or that stimulate the treated area.\n\n3. Avoid alcohol and smoking for about a week after the procedure, as they can increase the risk of side effects.\n\n4. If unexpected symptoms occur after the procedure — such as severe pain, abnormal sensation, worsening facial asymmetry, or difficulty swallowing — please contact the clinic immediately.\n\n5. After botox treatment to a muscle, avoiding excessive use of that muscle can help maintain the results.",
+      "zh-CN":"1. 注射后4小时内请勿触摸或揉捏注射部位，避免躺下或低头，以免药物扩散至其他肌肉。\n\n2. 注射后几天内，避免热水浴、桑拿、过度运动等可能促进血液循环（影响肉毒素效果）或刺激注射部位的活动。\n\n3. 饮酒和吸烟可能增加副作用的风险，建议注射后1周内避免。\n\n4. 如出现意外症状（如严重疼痛、异常感觉、表情变化不对称加重、吞咽困难等），请立即联系本院。\n\n5. 进行肌肉注射后，避免过度使用相关肌肉，这有助于保持效果。",
+      "zh-TW":"1. 注射後4小時內請勿觸摸或揉捏注射部位，避免躺下或低頭，以免藥物擴散至其他肌肉。\n\n2. 注射後數天內，請避免熱水浴、三溫暖、過度運動等可能促進血液循環（影響肉毒效果）或刺激注射部位的活動。\n\n3. 飲酒和吸菸可能增加副作用的風險，建議注射後1週內避免。\n\n4. 如出現意外症狀（如嚴重疼痛、異常感覺、表情變化不對稱加重、吞嚥困難等），請立即聯繫本院。\n\n5. 進行肌肉注射後，請避免過度使用相關肌肉，這有助於維持效果。",
+      ja:"・施術直後から4時間は、施術部位を触ったりこすったりしないでください。また、横になる·うつむくなどの行為は薬剤が他の筋肉に広がる可能性があるため避けてください。\n\n・施術後数日間は、血行を促進する行為（サウナ、温泉、過度な運動など）や、施術部位に刺激を与える行動は避けてください。\n\n・飲酒や喫煙は副作用のリスクを高めるため、施術後1週間ほどは控えてください。\n\n・施術後、上記のような予期しない症状（激しい痛み、異常感覚、表情の非対称の悪化、嚥下困難など）が現れた場合は、速やかに当院までご連絡ください。\n\n・筋肉へのボトックス施術後は、施術部位の筋肉の過度な使用を控えることで、効果の維持に役立ちます。"
+    } },
+
+  { id:"collageninjection", category:"injection",
+    name:{ ko:"콜라겐주사", en:"Collagen Injection", "zh-CN":"胶原蛋白注射", "zh-TW":"膠原蛋白注射", ja:"コラーゲン注射" },
+    care:{
+      ko:"1. 시술 부위에 통증, 붉어짐, 부기, 멍이 있는 경우 냉찜질로 완화하실 수 있습니다. 약제가 고르게 분포되도록 시술 후 1주일간은 주사 부위를 가볍게 마사지해 주시는 것을 권장드리며, 특히 볼륨 보충 부위는 '5-5-5 원칙'(5일간, 하루 5회, 회당 5분)을 권장드립니다.\n\n2. 1주일간은 사우나, 스팀사우나, 수영, 격렬한 운동, 음주 및 흡연을 삼가주세요.\n\n3. 심한 통증, 고열, 발진, 물집, 화농, 지속적인 부기나 덩어리 등 이상 증상이 나타나면 즉시 병원으로 연락해 주세요.",
+      en:"1. Pain, redness, swelling, or bruising at the injection site may be relieved with a cold compress. To help the product distribute evenly, gently massaging the injection area for about a week after the procedure is recommended — especially for volumizing areas, follow the \"5-5-5 rule\": massage for 5 days, 5 times a day, 5 minutes each time.\n\n2. For one week, avoid saunas, steam baths, swimming, strenuous exercise, alcohol, and smoking.\n\n3. If you experience severe pain, high fever, rash, blisters, pus, persistent swelling, or lumps, please contact the clinic immediately.",
+      "zh-CN":"1. 施术部位有疼痛，红肿，淤青，可冷敷缓解；为使药物均匀分布，建议术后一周内轻柔按摩注射区域，特别是体积补充部位，建议采用「5-5-5原则」，按摩5天，每天5次，每次5分钟。\n\n2. 一周内避免桑拿，蒸气浴，游泳，剧烈运动，饮酒与吸烟。\n\n3. 若出现剧烈疼痛，高烧，红疹，水泡，化脓，持续肿胀或硬块等异常症状，请立即联系医疗机构。",
+      "zh-TW":"1. 施術部位若有疼痛、紅腫、瘀青，可冷敷緩解；為使藥物均勻分佈，建議術後一週內輕柔按摩注射區域，特別是體積補充部位，建議採用「5-5-5原則」，按摩5天，每天5次，每次5分鐘。\n\n2. 一週內請避免三溫暖、蒸氣浴、游泳、劇烈運動、飲酒與吸菸。\n\n3. 若出現劇烈疼痛、高燒、紅疹、水泡、化膿、持續腫脹或硬塊等異常症狀，請立即聯繫醫療機構。",
+      ja:"・施術部位に痛み、赤み、腫れ、あざが生じた場合は、冷やすことで症状の緩和に役立ちます。薬剤が均一に広がるよう、施術後1週間程度は注射部位を優しくマッサージすることをお勧めします。特にボリュームを補う部位には「5-5-5の法則」（5日間、1日5回、1回5分間）でのマッサージを推奨します。\n\n・1週間はサウナ、スチームバス、水泳、激しい運動、飲酒、喫煙をお控えください。\n\n・強い痛み、高熱、発疹、水ぶくれ、化膿、持続する腫れやしこりなど異常症状が現れた場合は、直ちに医療機関へご連絡ください。"
+    } },
+
+  { id:"rejinbee", category:"injection",
+    name:{ ko:"리진뷔/리진핏주사 (지방분해주사)", en:"Lijin V / Lijin Fit Injection (Fat Dissolving)", "zh-CN":"Lijin V／Lijin Fit 注射（溶脂针）", "zh-TW":"Lijin V／Lijin Fit 注射（溶脂針）", ja:"リジンV／リジンフィット注射（脂肪溶解注射）" },
+    care:{
+      ko:"1. 시술 후 24시간 동안은 시술 부위에 물이 닿지 않도록 하시고, 세안과 메이크업은 최소한으로 해주세요.\n\n2. 부드럽게 마사지해 주시면 림프 순환을 촉진하여 시술 효과 향상에 도움이 될 수 있습니다.\n\n3. 시술 후 며칠간은 사우나, 스파, 수영, 격렬한 운동, 과도한 음주 등 시술 부위를 자극하거나 혈액순환을 촉진하는 행위는 삼가주세요.\n\n4. 멍이나 부기가 있는 경우, 냉찜질을 하시면 증상 완화에 도움이 됩니다.\n\n5. 충분한 수분 섭취, 균형 잡힌 식사, 적절한 운동은 시술 효과 유지에 도움이 됩니다.\n\n6. 알레르기 반응이나 염증 반응(발열, 가려움, 두드러기 등)이 의심되는 경우, 긁지 마시고 즉시 병원으로 연락해 주세요.",
+      en:"1. Avoid getting water on the treated area for 24 hours after the procedure, and keep face-washing and makeup to a minimum.\n\n2. Gently massaging the area can help promote lymphatic circulation and improve the effectiveness of the treatment.\n\n3. For several days after the procedure, avoid saunas, spas, swimming, strenuous exercise, and excessive alcohol, as these can stimulate the treated area or accelerate blood circulation.\n\n4. If bruising or swelling occurs, a cold compress can help relieve the symptoms.\n\n5. Staying well hydrated, eating a balanced diet, and exercising moderately can help maintain the treatment's effects.\n\n6. If you suspect an allergic or inflammatory reaction (fever, itching, hives, etc.), do not scratch the area and contact the clinic immediately.",
+      "zh-CN":"1. 施术后24小时内避免注射区域接触水，清洁与化妆请尽量轻柔，为促进淋巴循环，可进行轻柔按摩，有助于治疗效果。\n\n2. 几日内请避免桑拿，汗蒸，游泳，剧烈运动，过量饮酒等可能刺激治疗部位或加快血液循环的活动。\n\n3. 若有淤青或肿胀，可用冰敷缓解。\n\n4. 多喝水，均衡饮食与规律运动有助于维持治疗效果。\n\n5. 若怀疑出现过敏或炎症反应（如发热，瘙痒，荨麻疹），请勿抓挠，并立即联系医院。",
+      "zh-TW":"1. 施術後24小時內避免注射區域接觸水，清潔與化妝請盡量輕柔，為促進淋巴循環，可進行輕柔按摩，有助於治療效果。\n\n2. 幾日內請避免三溫暖、汗蒸、游泳、劇烈運動、過量飲酒等可能刺激治療部位或加快血液循環的活動。\n\n3. 若有瘀青或腫脹，可用冰敷緩解。\n\n4. 多喝水，均衡飲食與規律運動有助於維持治療效果。\n\n5. 若懷疑出現過敏或發炎反應（如發熱、搔癢、蕁麻疹），請勿抓撓，並立即聯繫醫院。",
+      ja:"・施術後24時間は施術部位を濡らさないようにし、洗顔やメイクは最小限にしてください。\n\n・優しくマッサージを行うことで、リンパ循環を促進し、施術効果の向上に役立つ場合があります。\n\n・施術後数日間は、サウナ、スパ、水泳、激しい運動、過度な飲酒など、施術部位を刺激したり血行を促進する行為はお控えください。\n\n・内出血や腫れがある場合は、冷却することで症状緩和に役立ちます。\n\n・十分な水分補給、バランスの良い食事、適度な運動を行うことで、施術効果の維持に役立ちます。\n\n・アレルギー反応や炎症反応（発熱、かゆみ、じんましんなど）が疑われる場合は、掻いたりせず直ちに当院までご連絡ください。"
+    } },
+
+  { id:"pigmentlaser", category:"laser",
+    name:{ ko:"색소레이저", en:"Pigment Laser", "zh-CN":"色素激光", "zh-TW":"色素雷射", ja:"色素レーザー" },
+    care:{
+      ko:"1. 시술 직후 나타나는 붉어짐, 부기, 열감 등은 비교적 정상적인 반응이며, 냉찜질(아이스팩 등)이 효과적일 수 있습니다.\n\n2. 딱지나 각질이 생기더라도 절대 억지로 떼어내지 마세요. 자연스럽게 떨어질 때까지 기다리시면 흉터와 색소침착을 예방할 수 있습니다.\n\n3. 1주일 정도는 사우나·온천·수영장·격렬한 운동·과도한 음주 및 흡연·필링·각질 제거를 삼가주세요.\n\n4. 딱지가 떨어진 후나 피코토닝 시술 후에는 자외선 차단을 철저히 해주세요. 외출 시 SPF50 이상의 자외선 차단제를 바르고, 모자나 양산으로 직사광선을 피해주세요. 이를 통해 색소침착 위험을 줄일 수 있습니다.\n\n5. 의료진으로부터 재생 크림이나 재생 테이프를 처방받으신 경우, 안내에 따라 계속 사용해 주세요.\n\n6. 시술 부위를 문지르거나 자극을 주지 마세요. 세안 시에도 부드럽게 해주세요.\n\n7. 심한 통증, 물집, 고름 등 이상 증상이 보이면 즉시 병원으로 연락해 주세요.\n\n8. 점을 완전히 제거하기 위해 추가 시술이 필요한 경우, 딱지가 떨어진 후 1~2개월 이상 경과한 뒤 재시술이 가능합니다. 정확한 시기는 의료진과 상담해 주세요.\n\n9. 시술 후에는 피부가 건조해지기 쉬우므로 보습제를 충분히 사용하여 피부를 진정시켜 주세요.\n\n10. 토닝 후 가려움을 동반한 붉어짐이나 두드러기가 지속되거나 예상치 못한 증상이 발생하면 즉시 병원으로 연락해 주세요.",
+      en:"1. Redness, swelling, and warmth immediately after the procedure are relatively normal reactions, and a cold compress (ice pack, etc.) can be effective.\n\n2. Even if a scab or dead skin forms, never force it off. Letting it fall off naturally helps prevent scarring and pigmentation.\n\n3. For about one week, avoid saunas, hot springs, swimming pools, strenuous exercise, excessive alcohol and smoking, peeling, and exfoliation.\n\n4. After the scab falls off or after pico toning, be thorough with sun protection. When going outside, apply SPF50+ sunscreen and avoid direct sunlight with a hat or parasol. This helps reduce the risk of pigmentation.\n\n5. If your doctor has prescribed a regenerating cream or tape, continue using it as directed.\n\n6. Do not rub or irritate the treated area. Be gentle when washing your face as well.\n\n7. If you notice severe pain, blisters, or pus, please contact the clinic promptly.\n\n8. If an additional procedure is needed to fully remove a mole, it can be done 1–2 months or more after the scab has fallen off. Please consult your doctor for the exact timing.\n\n9. Skin tends to become dry after the procedure, so use enough moisturizer to soothe the skin.\n\n10. If itchy redness or hives persist after toning, or if any unexpected symptoms occur, please contact the clinic immediately.",
+      "zh-CN":"1. 施术后立即出现的发红、肿胀、发热感等属于相对正常的反应，冷敷（冰袋等）可能有一定效果。\n\n2. 即使出现结痂或角质，也请勿强行剥除，等待其自然脱落有助于预防疤痕和色素沉着。\n\n3. 术后约一周内请避免桑拿、温泉、游泳池、剧烈运动、过量饮酒吸烟、去角质及焕肤类护理。\n\n4. 结痂脱落后或皮秒调理后，请务必做好防晒，外出时请涂抹SPF50以上防晒霜，并用帽子或遮阳伞避免直射阳光，以降低色素沉着风险。\n\n5. 若医护人员开具了再生修复霜或修复贴，请按指示持续使用。\n\n6. 请勿摩擦或刺激施术部位，洗脸时也请轻柔进行。\n\n7. 若出现剧烈疼痛、水泡、化脓等异常，请及时联系本院。\n\n8. 若需追加治疗以完全去除痣，需在结痂脱落后1～2个月以上再进行，具体时间请与医护人员商议。\n\n9. 施术后皮肤容易干燥，请充分使用保湿产品以镇定肌肤。\n\n10. 调理后若出现伴有瘙痒的持续性发红或荨麻疹，或出现其他非预期症状，请立即联系本院。",
+      "zh-TW":"1. 施術後立即出現的發紅、腫脹、發熱感等屬於相對正常的反應，冷敷（冰袋等）可能有一定效果。\n\n2. 即使出現結痂或角質，也請勿強行撕除，等待其自然脫落有助於預防疤痕和色素沉澱。\n\n3. 術後約一週內請避免三溫暖、溫泉、游泳池、劇烈運動、過量飲酒吸菸、去角質及煥膚類保養。\n\n4. 結痂脫落後或皮秒調理後，請務必做好防曬，外出時請塗抹SPF50以上防曬乳，並用帽子或陽傘避免直射陽光，以降低色素沉澱風險。\n\n5. 若醫護人員開立了修復霜或修復貼，請依指示持續使用。\n\n6. 請勿摩擦或刺激施術部位，洗臉時也請輕柔進行。\n\n7. 若出現劇烈疼痛、水泡、化膿等異常，請及時聯繫本院。\n\n8. 若需追加治療以完全去除痣，需在結痂脫落後1～2個月以上再進行，確切時間請與醫護人員討論。\n\n9. 施術後肌膚容易乾燥，請充分使用保濕產品以鎮定肌膚。\n\n10. 調理後若出現伴隨搔癢的持續性發紅或蕁麻疹，或出現其他非預期症狀，請立即聯繫本院。",
+      ja:"・施術直後の赤み、腫れ、熱感などは比較的正常な反応であり、冷却（アイスパックなど）が効果的な場合があります。\n\n・かさぶたや角質ができた場合でも決して無理に剥がさないでください。自然に剥がれ落ちるのを待つことで、傷跡や色素沈着を防ぐことができます。\n\n・1週間程度は、サウナ・温泉·プール·激しい運動·過度な飲酒や喫煙・ピーリング・角質除去を控えてください。\n\n・かさぶたが取れた後やピコトーニング施術後は、紫外線対策を徹底してください。外出時はSPF50以上の日焼け止めを塗布し、帽子や日傘で直射日光を避けてください。これにより色素沈着のリスクを軽減できます。\n\n・医療陣より再生クリームや再生テープを処方された場合は、指示に従い継続して使用してください。\n\n・施術部位を擦ったり刺激を与えないでください。洗顔の際もやさしく行ってください。\n\n・強い痛み、水ぶくれ、膿などの異常が見られた場合は、速やかに当院へご連絡ください。\n\n・ホクロを完全に除去するために追加施術が必要な場合はかさぶたが剥がれた後、1~2ヶ月以上経過してからの再施術が可能です。正確な時期については医療陣とご相談ください。\n\n・施術後は肌が乾燥しやすくなる為、保湿剤を十分に使用し肌を鎮静させてください。\n\n・トーニング後にかゆみを伴う赤みやじんましんが持続する場合や、予期せぬ症状が発生した場合は、すぐに当院へご連絡ください。"
+    } },
+
+  { id:"porelaser", category:"laser",
+    name:{ ko:"모공레이저", en:"Pore & Texture Laser", "zh-CN":"毛孔/肤质激光", "zh-TW":"毛孔/膚質雷射", ja:"毛穴・肌質レーザー" },
+    care:{
+      ko:"1. 시술 직후 나타나는 붉어짐, 부기, 열감은 정상적인 반응이며, 냉각하면 증상 완화에 도움이 될 수 있습니다.\n\n2. 시술 후에는 피부가 건조해지기 쉬우므로 보습제를 충분히 사용하여 피부를 진정시켜 주는 것이 중요합니다.\n\n3. 시술 후 딱지나 각질이 생기더라도 억지로 떼어내지 마세요. 자연스럽게 떨어질 때까지 기다리시면 흉터와 색소침착을 예방할 수 있습니다.\n\n4. 자외선 차단은 매우 중요합니다. 자외선 차단제를 꼼꼼히 바르고, 모자나 양산 등으로 직사광선을 피해주세요.\n\n5. 시술 후 24시간은 물에 닿지 않도록 하시고, 세안과 메이크업도 삼가주세요(의료진의 지시에 따라주세요).\n\n6. 시술 후 1~2주 정도는 필링이나 각질 제거 등의 사용을 피하시고, 시술 부위를 과도하게 문지르거나 자극을 주는 행위는 삼가주세요.\n\n7. 시술 후 며칠간은 사우나, 온천, 과도한 음주·흡연, 격렬한 운동을 삼가주세요.\n\n8. 충분한 수분 섭취와 균형 잡힌 식사 유지는 시술 효과 지속 및 회복에 도움이 됩니다.\n\n9. 붉어짐과 가려움, 두드러기, 물집 등 이상 반응이 지속되면 즉시 병원으로 연락해 주세요.",
+      en:"1. Redness, swelling, and warmth immediately after the procedure are normal reactions, and cooling can help relieve these symptoms.\n\n2. Skin tends to become dry after the procedure, so it's important to use enough moisturizer to calm the skin.\n\n3. Even if a scab or dead skin forms after the procedure, do not force it off. Letting it fall off naturally helps prevent scarring and pigmentation.\n\n4. Sun protection is very important. Apply sunscreen thoroughly and avoid direct sunlight with a hat or parasol.\n\n5. Avoid getting water on the treated area for 24 hours after the procedure, and avoid washing your face or applying makeup (follow your doctor's instructions).\n\n6. For about 1–2 weeks after the procedure, avoid peeling or exfoliating products, and avoid rubbing or irritating the treated area excessively.\n\n7. For several days after the procedure, avoid saunas, hot springs, excessive alcohol and smoking, and strenuous exercise.\n\n8. Staying well hydrated and maintaining a balanced diet can help sustain the results and support recovery.\n\n9. If redness, itching, hives, or blisters persist, please contact the clinic immediately.",
+      "zh-CN":"1. 施术后立即出现的发红、肿胀、发热感属于正常反应，冷敷有助于缓解症状。\n\n2. 施术后皮肤容易干燥，充分使用保湿产品镇定肌肤十分重要。\n\n3. 施术后即使出现结痂或角质，也请勿强行剥除，等待其自然脱落有助于预防疤痕和色素沉着。\n\n4. 防晒非常重要，请仔细涂抹防晒霜，并用帽子或遮阳伞避免直射阳光。\n\n5. 施术后24小时内请避免接触水，并暂缓洗脸和化妆（请遵循医护人员指示）。\n\n6. 施术后1～2周左右请避免使用焕肤或去角质产品，并避免过度摩擦或刺激施术部位。\n\n7. 施术后数日内请避免桑拿、温泉、过量饮酒吸烟及剧烈运动。\n\n8. 充分补水并保持均衡饮食有助于维持施术效果及恢复。\n\n9. 若发红、瘙痒、荨麻疹、水泡等异常反应持续，请立即联系医院。",
+      "zh-TW":"1. 施術後立即出現的發紅、腫脹、發熱感屬於正常反應，冷敷有助於緩解症狀。\n\n2. 施術後肌膚容易乾燥，充分使用保濕產品鎮定肌膚十分重要。\n\n3. 施術後即使出現結痂或角質，也請勿強行撕除，等待其自然脫落有助於預防疤痕和色素沉澱。\n\n4. 防曬非常重要，請仔細塗抹防曬乳，並用帽子或陽傘避免直射陽光。\n\n5. 施術後24小時內請避免接觸水，並暫緩洗臉和化妝（請遵循醫護人員指示）。\n\n6. 施術後1～2週左右請避免使用煥膚或去角質產品，並避免過度摩擦或刺激施術部位。\n\n7. 施術後數日內請避免三溫暖、溫泉、過量飲酒吸菸及劇烈運動。\n\n8. 充分補水並保持均衡飲食有助於維持施術效果及恢復。\n\n9. 若發紅、搔癢、蕁麻疹、水泡等異常反應持續，請立即聯繫院方。",
+      ja:"・施術直後の赤み・腫れ・熱感は正常な反応であり、冷やすことで症状の緩和に役立つことがあります。\n\n・施術後は肌が乾燥しやすくなるため、保湿剤を十分に使用して肌を落ち着かせることが重要です。\n\n・施術後にかさぶたや角質が生じた場合でも、無理に剥がさないでください。自然に剥がれるのを待つことで、瘢痕や色素沈着を防ぐことができます。\n\n・紫外線対策は非常に重要です。日焼け止めをしっかり塗り、帽子や日傘などで直射日光を避けてください。\n\n・施術後24時間は水に触れないようにし、洗顔やメイクも控えてください（医療陣の指示に従ってください）。\n\n・施術後1～2週間程度は、ピーリングや角質除去などの使用は避け、施術部位を過度にこすったり刺激を与えたりする行為は控えてください。\n\n・施術後数日間はサウナ、温泉、過度の飲酒·喫煙、激しい運動を控えてください。\n\n・十分な水分補給とバランスの取れた食事の維持は、施術効果の持続および回復に役立ちます。\n\n・赤みとかゆみ、じんましん、水ぶくれなどの異常反応が続く場合は、すぐに病院へご連絡ください。"
+    } },
+
+  { id:"liftinglaser", category:"laser",
+    name:{ ko:"리프팅 / 리프팅레이저", en:"Skin Tightening / Lifting", "zh-CN":"紧致/提升治疗", "zh-TW":"緊緻/拉提療程", ja:"タイトニング/リフティング" },
+    care:{
+      ko:"1. 시술 직후에는 냉찜질팩, 사우나, 온천, 격렬한 운동 등을 피해주세요.\n\n2. 시술 후 일시적인 열감, 부기, 붉어짐이 나타날 수 있으나 이는 정상적인 반응이므로 지나치게 걱정하지 않으셔도 됩니다.\n\n3. 시술 후에는 피부가 건조해지기 쉬우므로 보습제를 충분히 사용하여 피부를 진정시켜 주세요.\n\n4. 외출 시에는 자외선 차단제를 꼼꼼히 발라주세요.\n\n5. 시술 후 1~2주간은 필링이나 각질 제거 등의 사용을 피하시고, 시술 부위를 세게 문지르거나 자극하는 행위는 삼가주세요.\n\n6. 음주와 흡연은 회복을 지연시키고 부작용 위험을 높이므로 시술 후 1~2주간은 삼가주세요.\n\n7. 위와 같은 예상치 못한 증상이 나타나면 즉시 병원으로 연락해 주세요.\n\n8. 충분한 수분 섭취와 균형 잡힌 식사를 유지하시면 회복과 효과 유지에 도움이 됩니다.\n\n9. 심한 통증이나 물집, 고름 등 이상 증상이 나타나면 즉시 병원으로 연락해 주세요.\n\n10. 회복 속도는 개인차가 있지만, 일반적으로 약 1개월 간격으로 3~5회 시술받으시면 효과적입니다. 정확한 횟수와 시술 간격은 의료진과 상담해 주세요.",
+      en:"1. Immediately after the procedure, avoid cold packs, saunas, hot springs, and strenuous exercise.\n\n2. Temporary warmth, swelling, or redness may occur after the procedure, but this is a normal reaction, so there's no need to worry excessively.\n\n3. Skin tends to become dry after the procedure, so use enough moisturizer to soothe the skin.\n\n4. Apply sunscreen thoroughly when going outside.\n\n5. For 1–2 weeks after the procedure, avoid peeling or exfoliating products, and avoid rubbing or irritating the treated area firmly.\n\n6. Avoid alcohol and smoking for 1–2 weeks after the procedure, as they can delay recovery and increase the risk of side effects.\n\n7. If any unexpected symptoms like the above occur, please contact the clinic immediately.\n\n8. Staying well hydrated and maintaining a balanced diet supports better recovery and helps maintain results.\n\n9. If severe pain, blisters, pus, or other abnormal symptoms occur, please contact the clinic immediately.\n\n10. Recovery speed varies by individual, but generally 3–5 sessions spaced about a month apart are effective. Please consult your doctor for the exact number of sessions and intervals.",
+      "zh-CN":"1. 施术后请立即避免冷敷袋、桑拿、温泉、剧烈运动等。\n\n2. 施术后可能出现暂时性发热感、肿胀、发红，属于正常反应，无需过度担心。\n\n3. 施术后皮肤容易干燥，请充分使用保湿产品镇定肌肤。\n\n4. 外出时请仔细涂抹防晒霜。\n\n5. 施术后1～2周内请避免使用焕肤或去角质产品，并避免用力摩擦或刺激施术部位。\n\n6. 饮酒和吸烟会延缓恢复并增加副作用风险，请在施术后1～2周内避免。\n\n7. 如出现上述非预期症状，请立即联系本院。\n\n8. 充分补水并保持均衡饮食有助于更好地恢复及维持效果。\n\n9. 若出现剧烈疼痛、水泡、化脓等异常症状，请立即联系本院。\n\n10. 恢复速度因人而异，一般以约1个月为间隔进行3～5次施术效果较好。具体次数及施术间隔请与医护人员商议。",
+      "zh-TW":"1. 施術後請立即避免冷敷袋、三溫暖、溫泉、劇烈運動等。\n\n2. 施術後可能出現暫時性發熱感、腫脹、發紅，屬於正常反應，無需過度擔心。\n\n3. 施術後肌膚容易乾燥，請充分使用保濕產品鎮定肌膚。\n\n4. 外出時請仔細塗抹防曬乳。\n\n5. 施術後1～2週內請避免使用煥膚或去角質產品，並避免用力摩擦或刺激施術部位。\n\n6. 飲酒和吸菸會延緩恢復並增加副作用風險，請在施術後1～2週內避免。\n\n7. 如出現上述非預期症狀，請立即聯繫本院。\n\n8. 充分補水並保持均衡飲食有助於更好地恢復及維持效果。\n\n9. 若出現劇烈疼痛、水泡、化膿等異常症狀，請立即聯繫本院。\n\n10. 恢復速度因人而異，一般以約1個月為間隔進行3～5次施術效果較好。具體次數及施術間隔請與醫護人員討論。",
+      ja:"・施術直後は、冷却パック、サウナ、温泉、激しい運動などは避けてください。\n\n・施術後に一時的な熱感、腫れ、赤みが生じることがありますが、これは正常な反応ですので過度に心配なさらないでください。\n\n・施術後は肌が乾燥しやすくなるため、保湿剤を十分に使用し肌を鎮静させてください。\n\n・外出時は日焼け止めをしっかり塗ってください。\n\n・施術後1〜2週間は、ピーリングや角質除去などの使用を避け、施術部位を強くこすったり刺激する行為は避けてください。\n\n・飲酒や喫煙は回復を遅らせ、副作用のリスクを高めるため、施術後1〜2週間は控えてください。\n\n・上記のような予期しない症状が現れた場合は、すぐに当院にご連絡ください。\n\n・十分な水分摂取とバランスの良い食事を意識することで、より良い回復と効果の維持につながります。\n\n・強い痛みや、水ぶくれ、膿などの異常な症状が現れた場合は、すぐに当院にご連絡ください。\n\n・回復のスピードには個人差がありますが、一般的には約1ヶ月の間隔で3～5回ほど施術を受けると効果的です。詳しい回数や施術間隔については、医療陣とご相談ください。"
+    } },
+
+  { id:"hairremoval", category:"laser",
+    name:{ ko:"레이저제모", en:"Laser Hair Removal", "zh-CN":"激光脱毛", "zh-TW":"雷射除毛", ja:"レーザー脱毛" },
+    care:{
+      ko:"1. 시술 직후 나타나는 붉어짐이나 부기는 냉찜질을 하면 완화될 수 있습니다.\n\n2. 시술 후 2~3일간은 모낭염을 예방하기 위해 뜨거운 샤워, 사우나, 온천, 수영, 격렬한 운동을 피하시는 것을 권장드립니다.\n\n3. 시술 후에는 피부가 건조해지기 쉬우므로 보습제를 충분히 사용하여 피부를 진정시켜 주세요.\n\n4. 외출 시에는 자외선 차단제를 꼼꼼히 발라주세요.\n\n5. 시술 후 털은 자연스럽게 빠지므로, 억지로 뽑거나 뜯어내지 마세요.\n\n6. 음주와 흡연은 회복을 지연시키고 부작용 위험을 높이므로 시술 후 1~2주간은 삼가주세요.\n\n7. 시술 후 심한 통증, 화끈거림, 물집, 진물, 심한 가려움, 모낭염 등 예상치 못한 증상이 나타나면 즉시 병원으로 연락해 주세요.\n\n8. 다음 시술 전까지는 면도 외의 제모 방법(족집게, 왁싱 등)은 사용하지 마세요.\n\n9. 권장 시술 간격은 6~8주이며, 보통 5회 정도의 시술을 권장드리지만 개인차가 있어 추가 시술이 필요할 수 있습니다.",
+      en:"1. Redness or swelling immediately after the procedure may be relieved with a cold compress.\n\n2. For 2–3 days after the procedure, it's recommended to avoid hot showers, saunas, hot springs, swimming, and strenuous exercise to prevent folliculitis.\n\n3. Skin tends to become dry after the procedure, so use enough moisturizer to soothe the skin.\n\n4. Apply sunscreen thoroughly when going outside.\n\n5. Hair will naturally fall out after the procedure, so do not forcibly pull or pluck it.\n\n6. Avoid alcohol and smoking for 1–2 weeks after the procedure, as they can delay recovery and increase the risk of side effects.\n\n7. If unexpected symptoms occur after the procedure — such as severe pain, burning sensation, blisters, discharge, intense itching, or folliculitis — please contact the clinic promptly.\n\n8. Until your next session, avoid any hair removal method other than shaving (e.g., tweezing, waxing).\n\n9. The recommended interval between sessions is 6–8 weeks, with about 5 sessions generally recommended; however, additional sessions may be needed depending on individual differences.",
+      "zh-CN":"术后立即出现的泛红及肿胀，可通过冷敷缓解。\n\n术后2–3天内，为预防毛囊炎，请避免热水浴、日晒、桑拿、汗蒸、游泳及剧烈运动。\n\n术后皮肤可能会感到干燥，请充分涂抹保湿产品以舒缓肌肤。\n\n外出时请务必仔细做好防晒。\n\n术后毛发会自然脱落，请勿强行拔除或拉扯毛发。\n\n饮酒及吸烟可能延缓恢复并增加副作用风险，请于术后1–2周内避免。\n\n若出现严重疼痛、灼热感、水泡、渗液、剧烈瘙痒或毛囊炎等异常症状，请立即联系本院。\n\n下次治疗前，请避免除刮毛以外的所有脱毛方式（如拔毛、蜜蜡脱毛等）。\n\n建议治疗间隔为6至8周，一般建议进行5次疗程，但根据个人情况不同，可能需要额外治疗。",
+      "zh-TW":"術後立即出現的泛紅及腫脹，可透過冷敷緩解。\n\n術後2–3天內，為預防毛囊炎，請避免熱水浴、日曬、三溫暖、汗蒸、游泳及劇烈運動。\n\n術後皮膚可能會感到乾燥，請充分塗抹保濕產品以舒緩肌膚。\n\n外出時請務必仔細做好防曬。\n\n術後毛髮會自然脫落，請勿強行拔除或拉扯毛髮。\n\n飲酒及吸菸可能延緩恢復並增加副作用風險，請於術後1–2週內避免。\n\n若出現嚴重疼痛、灼熱感、水泡、滲液、劇烈搔癢或毛囊炎等異常症狀，請立即聯繫本院。\n\n下次治療前，請避免除刮毛以外的所有除毛方式（如拔毛、蜜蠟除毛等）。\n\n建議治療間隔為6至8週，一般建議進行5次療程，但根據個人情況不同，可能需要額外治療。",
+      ja:"・施術直後の赤みや腫れには、冷やすことで症状が和らぐことがあります。\n\n・施術後2～3日間は、毛包炎を防ぐために熱いシャワー、サウナ、温泉、水泳、激しい運動は避けることをお勧めします。\n\n・施術後は肌が乾燥しやすくなるため、保湿剤を十分に使用し、肌を鎮静させてください。\n\n・外出時は日焼け止めをしっかり塗ってください。\n\n・施術後は毛が自然に抜け落ちるので、無理に引き抜いたり剥がしたりしないでください。\n\n・飲酒や喫煙は回復を遅らせ、副作用のリスクを高めるため、施術後1～2週間は控えてください。\n\n・施術後、上記のような予期しない症状（強い痛み、灼熱感、水疱、滲出液、激しいかゆみ、毛包炎など）が現れた場合は、速やかに当院までご連絡ください。\n\n・次回の施術までは、シェービング以外の脱毛方法（毛抜きやワックス脱毛など）は使用しないでください。\n\n・施術の推奨間隔は6～8週間で、5回程度の施術をお勧めしていますが、個人差があるため追加施術が必要な場合もあります。"
+    } },
+
+  { id:"picogenesis", category:"laser",
+    name:{ ko:"피코/제네시스", en:"Pico / Genesis Laser", "zh-CN":"皮秒/Genesis激光", "zh-TW":"皮秒/Genesis雷射", ja:"ピコ/ジェネシスレーザー" },
+    care:{
+      ko:"1. 시술 후 나타나는 붉어짐, 부기, 화끈거림 등은 흔히 있는 반응이며 냉찜질로 완화할 수 있습니다.\n\n2. 피부가 일시적으로 건조해질 수 있으니 보습 케어를 강화하여 불편감을 완화해 주세요.\n\n3. 자외선 차단은 시술 후 가장 중요한 관리 단계입니다. SPF50 이상의 자외선 차단제를 사용하시고, 모자·양산 등 물리적 차단도 함께 해주셔서 색소침착을 예방해 주세요.\n\n4. 시술 후 1~2주간은 각질 제거, 스크럽 등 자극이 되는 관리는 피하시고, 시술 부위를 세게 문지르거나 긁지 마세요.\n\n5. 음주와 흡연은 회복을 지연시키고 부작용 위험을 높이므로 삼가주세요.\n\n6. 지속적인 가려움, 홍반, 두드러기 등 이상 반응이 나타나면 즉시 병원으로 연락해 주세요.\n\n7. 충분한 수분 섭취와 균형 잡힌 영양 섭취는 회복과 효과 유지에 도움이 됩니다.\n\n8. 딱지나 각질이 생긴 경우 억지로 떼어내지 마세요. 색소침착이 남을 수 있습니다.",
+      en:"1. Redness, swelling, and a warm/burning sensation are common reactions after the procedure and can be relieved with a cold compress.\n\n2. Skin may become temporarily dry, so strengthen your moisturizing routine to ease any discomfort.\n\n3. Sun protection is the most important step of aftercare — use SPF50+ sunscreen and combine it with physical protection like a hat or parasol to prevent pigmentation.\n\n4. For 1–2 weeks after the procedure, avoid exfoliating or abrasive skincare, and avoid rubbing or scratching the treated area.\n\n5. Avoid alcohol and smoking, as they can delay recovery and increase the risk of side effects.\n\n6. If persistent itching, redness, or hives occur, please contact the clinic immediately.\n\n7. Staying well hydrated and maintaining balanced nutrition helps support recovery and maintain results.\n\n8. If a scab or flaking occurs, do not force it off, as this may lead to pigmentation.",
+      "zh-CN":"1. 施术后出现发红、肿胀、灼热感等属于常见反应，可通过冷敷缓解。\n\n2. 皮肤可能暂时干燥，请加强保湿护理以缓解不适。\n\n3. 防晒是施术后最重要的护理步骤，请使用SPF50以上防晒霜，并配合帽子、遮阳伞等物理防晒，避免色素沉着。\n\n4. 施术后一到两周内请避免去角质、磨砂等刺激性操作，避免用力摩擦或抓挠治疗区域。\n\n5. 请避免饮酒与吸烟，这些行为会延迟恢复并增加副作用风险。\n\n6. 若出现持续性瘙痒、红斑或荨麻疹等异常反应，请立即联系医院。\n\n7. 保持充分水分摄取与营养均衡，有助于恢复与疗效维持。\n\n8. 若出现结痂与脱屑，请勿强行剥除，以免留下色素沉着。",
+      "zh-TW":"1. 施術後出現發紅、腫脹、灼熱感等屬於常見反應，可透過冷敷緩解。\n\n2. 皮膚可能暫時乾燥，請加強保濕護理以緩解不適。\n\n3. 防曬是施術後最重要的護理步驟，請使用SPF50以上防曬乳，並搭配帽子、遮陽傘等物理防曬，避免色素沉澱。\n\n4. 施術後一到兩週內請避免去角質、磨砂等刺激性操作，避免用力摩擦或抓撓治療區域。\n\n5. 請避免飲酒與吸菸，這些行為會延遲恢復並增加副作用風險。\n\n6. 若出現持續性搔癢、紅斑或蕁麻疹等異常反應，請立即聯繫醫院。\n\n7. 保持充分水分攝取與營養均衡，有助於恢復與療效維持。\n\n8. 若出現結痂與脫屑，請勿強行撕除，以免留下色素沉澱。",
+      ja:"・施術後の赤み、腫れ、灼熱感などはよくある反応で、冷やすことで緩和できます。\n\n・施術後は肌が一時的に乾燥しやすくなるため、保湿ケアを強化して不快感を和らげてください。\n\n・紫外線対策は施術後最も重要なケアです。SPF50以上の日焼け止めをご使用いただき、帽子や日傘などの物理的な対策も併用して色素沈着を防いでください。\n\n・施術後1〜2週間は、角質除去やスクラブなど刺激の強いケアは避け、施術部位を強くこすったり掻いたりしないでください。\n\n・飲酒や喫煙は回復を遅らせ、副作用のリスクを高めるため控えてください。\n\n・持続するかゆみ、紅斑、じんましんなどの異常反応が見られた場合は、すぐに当院までご連絡ください。\n\n・十分な水分補給とバランスの良い栄養摂取は、回復および効果の維持に役立ちます。\n\n・かさぶたや皮むけが生じた場合は、無理に剥がさないでください。色素沈着が残る可能性があります。"
+    } }
+];
+
+/* ========================= 여기부터는 동작 로직입니다 (수정 불필요) ========================= */
+
+const CATEGORY_ORDER = ["laser","injection","lifting"];
+
+let state = { lang:"ko", procId:null, step:1 };
+
+const $ = (sel) => document.querySelector(sel);
+const screens = { 1:"#screen-lang", 2:"#screen-proc", 3:"#screen-care" };
+
+function t(){ return UI[state.lang]; }
+
+function renderLangScreen(){
+  $("#clinicNameLabel").textContent = CLINIC_NAME;
+  const grid = $("#langGrid");
+  grid.innerHTML = "";
+  LANGUAGES.forEach(l => {
+    const btn = document.createElement("button");
+    btn.className = "lang-btn";
+    btn.innerHTML = `<span>${l.label}</span><span class="arrow">›</span>`;
+    btn.addEventListener("click", () => {
+      state.lang = l.code;
+      goToStep(2);
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function renderProcScreen(){
+  const T = t();
+  $("#procTitle").textContent = T.chooseProcedure;
+
+  const wrap = $("#procGroups");
+  wrap.innerHTML = "";
+
+  CATEGORY_ORDER.forEach(cat => {
+    const items = PROCEDURES.filter(p => p.category === cat);
+    if(!items.length) return;
+
+    const block = document.createElement("div");
+    block.className = "cat-block";
+
+    const label = document.createElement("div");
+    label.className = `cat-label ${cat}`;
+    label.textContent = T.cat[cat];
+    block.appendChild(label);
+
+    const grid = document.createElement("div");
+    grid.className = "proc-grid";
+
+    items.forEach(p => {
+      const btn = document.createElement("button");
+      btn.className = `proc-btn ${cat}`;
+      btn.textContent = p.name[state.lang];
+      btn.addEventListener("click", () => {
+        state.procId = p.id;
+        goToStep(3);
+      });
+      grid.appendChild(btn);
+    });
+
+    block.appendChild(grid);
+    wrap.appendChild(block);
+  });
+}
+
+function renderCareScreen(){
+  const T = t();
+  const proc = PROCEDURES.find(p => p.id === state.procId);
+  if(!proc) return;
+
+  $("#careTag").textContent = T.careTag;
+  $("#careProcName").textContent = proc.name[state.lang];
+  $("#careBody").textContent = proc.care[state.lang];
+  $("#careFooter").textContent = T.footer;
+  $("#toProcBtn").textContent = T.toProc;
+  $("#toLangBtn").textContent = T.changeLang;
+}
+
+function updateSteps(){
+  document.querySelectorAll(".step-dot").forEach(dot => {
+    const s = Number(dot.dataset.step);
+    dot.classList.toggle("active", s === state.step);
+    dot.classList.toggle("done", s < state.step);
+  });
+
+  const backBtn = $("#backBtn");
+  const backLabel = $("#backBtnLabel");
+  if(state.step === 1){
+    backBtn.classList.remove("show");
+  } else {
+    backBtn.classList.add("show");
+    backLabel.textContent = t().back;
+  }
+}
+
+function goToStep(step){
+  state.step = step;
+  Object.values(screens).forEach(sel => $(sel).classList.remove("active"));
+
+  if(step === 1) renderLangScreen();
+  if(step === 2) renderProcScreen();
+  if(step === 3) renderCareScreen();
+
+  $(screens[step]).classList.add("active");
+  updateSteps();
+  window.scrollTo({top:0});
+}
+
+$("#backBtn").addEventListener("click", () => {
+  if(state.step === 3) goToStep(2);
+  else if(state.step === 2) goToStep(1);
+});
+$("#toProcBtn").addEventListener("click", () => goToStep(2));
+$("#toLangBtn").addEventListener("click", () => goToStep(1));
+
+goToStep(1);
+</script>
+</body>
+</html>
